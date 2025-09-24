@@ -1,0 +1,1 @@
+Markdown app like Obsidian with a preview window
