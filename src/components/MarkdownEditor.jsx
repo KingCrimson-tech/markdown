@@ -88,7 +88,7 @@ const MarkdownEditor = () => {
     { label: 'Code', title: 'Code', action: () => insertFormatting('`', '`') },
     { label: 'Link', title: 'Link', action: () => insertFormatting('[', '](https://example.com)') },
     { label: 'List', title: 'Bullet List', action: () => insertFormatting('- ') },
-    { label: '1.', title: 'Numbered List', action: () => insertFormatting('1. ') },
+    // { label: '1.', title: 'Numbered List', action: () => insertFormatting('1. ') },
     { label: 'Quote', title: 'Blockquote', action: () => insertFormatting('> ') },
   ];
 
@@ -181,14 +181,14 @@ const MarkdownEditor = () => {
             <div className="flex gap-2">
               <button
                 onClick={exportAsMarkdown}
-                className="px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                className="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
                 title="Export as Markdown"
               >
                 Export MD
               </button>
               <button
                 onClick={exportAsHTML}
-                className="px-3 py-2 text-sm bg-purple-600 text-white rounded hover:bg-purple-700"
+                className="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
                 title="Export as HTML"
               >
                 Export HTML
