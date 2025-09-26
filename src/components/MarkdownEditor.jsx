@@ -1,9 +1,9 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useCallback } from "react";
-// import dompurify from "dompurify";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-// import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-// import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 const MarkdownEditor = () => {
   //State initialization
@@ -136,56 +136,6 @@ const MarkdownEditor = () => {
     },
   ];
 
-  //Rendering markdown with regex good enough for now(adding code highlighting and other stuff later)
-  //XSS attack possible so use DOMpurify
-  // const renderMarkdown = (text) => {
-  //   const rawHtml = text
-  //       .replace(/^### (.*$)/gim, "<h3>$1</h3>")
-  //       .replace(/^## (.*$)/gim, "<h2>$1</h2>")
-  //       .replace(/^# (.*$)/gim, "<h1>$1</h1>")
-  //       .replace(/\*\*\*(.*?)\*\*\*/gim, "<strong><em>$1</em></strong>")
-  //       .replace(/\*\*(.*?)\*\*/gim, "<strong>$1</strong>")
-  //       .replace(/\*(.*?)\*/gim, "<em>$1</em>")
-  //       .replace(/```(\w+)?\n([\s\S]*?)```/gim, "<pre><code>$2</code></pre>")
-  //       .replace(/`(.*?)`/gim, "<code>$1</code>")
-  //       .replace(
-  //         /\[([^\]]+)\]\(([^)]+)\)/gim,
-  //         '<a href="$2" target="_blank">$1</a>'
-  //       )
-  //       .replace(
-  //         /^\s*- \[x\] (.*$)/gim,
-  //         '<div style="margin: 0.5em 0;"><input type="checkbox" checked disabled style="margin-right: 0.5em;">$1</div>'
-  //       )
-  //       .replace(
-  //         /^\s*- \[ \] (.*$)/gim,
-  //         '<div style="margin: 0.5em 0;"><input type="checkbox" disabled style="margin-right: 0.5em;">$1</div>'
-  //       )
-  //       // unordered list items
-  //       .replace(/(?:^\s*-\s.*\n?)+/gim, (match) => {
-  //         const items = match
-  //           .trim()
-  //           .split("\n")
-  //           .map((line) => line.replace(/^\s*-\s(.*)$/, "<li>$1</li>"))
-  //           .join("");
-  //         return `<ul>${items}</ul>`;
-  //       })
-  //       // ordered list items
-  //       .replace(/(?:^\s*\d+\.\s.*\n?)+/gim, (match) => {
-  //         const items = match
-  //           .trim()
-  //           .split("\n")
-  //           .map((line) => line.replace(/^\s*\d+\.\s(.*)$/, "<li>$1</li>"))
-  //           .join("");
-  //         return `<ol>${items}</ol>`;
-  //       })
-  //       .replace(/^> (.*$)/gim, "<blockquote>$1</blockquote>")
-  //       .replace(/^---$/gim, "<hr>")
-  //       .replace(/\n\n/gim, "</p><p>")
-  //       .replace(/\n/gim, "<br>")
-
-  //       return dompurify.sanitize(rawHtml);
-  // };
-
   //Exporting as markdown and html
   const exportAsMarkdown = () => {
     const blob = new Blob([markdown], { type: "text/markdown" });
@@ -193,33 +143,6 @@ const MarkdownEditor = () => {
     const a = document.createElement("a");
     a.href = url;
     a.download = "document.md";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const exportAsHTML = () => {
-    const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Markdown Document</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; line-height: 1.6; }
-    h1, h2, h3 { color: #333; }
-    code { background: #f5f5f5; padding: 0.2em 0.4em; border-radius: 3px; }
-    pre { background: #f5f5f5; padding: 1em; border-radius: 5px; overflow-x: auto; }
-    blockquote { border-left: 4px solid #ddd; margin-left: 0; padding-left: 1em; color: #666; }
-  </style>
-</head>
-<body>
-<div>${markdown}</div>
-</body>
-</html>`;
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "document.html";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -264,13 +187,6 @@ const MarkdownEditor = () => {
                 title="Export as Markdown"
               >
                 Export MD
-              </button>
-              <button
-                onClick={exportAsHTML}
-                className="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                title="Export as HTML"
-              >
-                Export HTML
               </button>
             </div>
 
@@ -335,9 +251,29 @@ const MarkdownEditor = () => {
             <div className="flex-1 overflow-auto p-4 bg-white dark:bg-gray-900">
               <div className="markdown-content max-w-none prose prose-lg dark:prose-invert">
                 <ReactMarkdown
-                  children={markdown}
                   remarkPlugins={[remarkGfm]}
-                />
+                  components={{
+                    code({ node, inline, className, children, ...props }) {
+                      const match = /language-(\w+)/.exec(className || "");
+                      return !inline && match ? (
+                        <SyntaxHighlighter
+                          style={vscDarkPlus}
+                          language={match[1]}
+                          PreTag="div"
+                          {...props}
+                        >
+                          {String(children).replace(/\n$/, "")}
+                        </SyntaxHighlighter>
+                      ) : (
+                        <code className={className} {...props}>
+                          {children}
+                        </code>
+                      );
+                    },
+                  }}
+                >
+                  {markdown}
+                </ReactMarkdown>
               </div>
             </div>
           </div>
