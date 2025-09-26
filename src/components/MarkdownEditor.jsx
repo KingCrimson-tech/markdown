@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -11,7 +11,8 @@ const MarkdownEditor = () => {
     '# Welcome to Markdown Editor\n\nStart typing your markdown here...\n\n## Features\n- Live preview\n- Syntax highlighting\n- Dark mode support\n- Local storage persistence\n- Toolbar with formatting buttons\n- Keyboard shortcuts (Ctrl+B, Ctrl+I)\n\n## Example Content\n\n**Bold text** and *italic text*\n\n`Inline code` and code blocks:\n\n```javascript\nconst greeting = "Hello, World!";\nconsole.log(greeting);\n```\n\n> This is a blockquote\n> It can span multiple lines\n\n### Task List\n- [x] Build basic editor\n- [x] Add live preview\n- [ ] Add more features\n- [ ] Polish the UI\n\n---\n\n*Happy writing!*'
   );
   const [viewMode, setViewMode] = useState("split");
-  const [theme, setTheme] = useState("auto"); // "auto", true, or false
+  const [theme, setTheme] = useState("auto");
+  const textareaRef = useRef(null);
 
   //Load from local storage on mount
   useEffect(() => {
@@ -74,23 +75,21 @@ const MarkdownEditor = () => {
   //   }
   // }, [isDarkMode]);
 
-  //Bad code for directly manipulating textarea selection and inserting formatting(change this with useRef or something else)
-  //changes needed are remove the markdown dependency from useCallback and use a ref for the textarea
-  const insertFormatting = useCallback(
-    (before, after = "") => {
-      const textarea = document.getElementById("markdown-textarea");
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const selectedText = markdown.substring(start, end);
+  //Function to insert markdown formatting at cursor position(uses useRef hook for DOM manipulation instead of the prior direct manipulations)
+  const insertFormatting = useCallback((before, after = "") => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
 
+    setMarkdown((prev) => {
+      const selectedText = prev.substring(start, end);
       const newText =
-        markdown.substring(0, start) +
+        prev.substring(0, start) +
         before +
         selectedText +
         after +
-        markdown.substring(end);
-      setMarkdown(newText);
-
+        prev.substring(end);
       setTimeout(() => {
         textarea.focus();
         textarea.setSelectionRange(
@@ -98,9 +97,9 @@ const MarkdownEditor = () => {
           start + before.length + selectedText.length
         );
       }, 0);
-    },
-    [markdown]
-  );
+      return newText;
+    });
+  }, []);
 
   //Keyboard shortcuts for bold and italic
   useEffect(() => {
@@ -262,6 +261,7 @@ const MarkdownEditor = () => {
               </span>
             </div>
             <textarea
+              ref={textareaRef}
               id="markdown-textarea"
               value={markdown}
               onChange={(e) => setMarkdown(e.target.value)}
