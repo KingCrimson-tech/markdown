@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import dompurify from "dompurify";
-// import ReactMarkdown from 'react-markdown';
-// import remarkGfm from 'remark-gfm';
+// import dompurify from "dompurify";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 // import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 // import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -138,53 +138,53 @@ const MarkdownEditor = () => {
 
   //Rendering markdown with regex good enough for now(adding code highlighting and other stuff later)
   //XSS attack possible so use DOMpurify
-  const renderMarkdown = (text) => {
-    const rawHtml = text
-        .replace(/^### (.*$)/gim, "<h3>$1</h3>")
-        .replace(/^## (.*$)/gim, "<h2>$1</h2>")
-        .replace(/^# (.*$)/gim, "<h1>$1</h1>")
-        .replace(/\*\*\*(.*?)\*\*\*/gim, "<strong><em>$1</em></strong>")
-        .replace(/\*\*(.*?)\*\*/gim, "<strong>$1</strong>")
-        .replace(/\*(.*?)\*/gim, "<em>$1</em>")
-        .replace(/```(\w+)?\n([\s\S]*?)```/gim, "<pre><code>$2</code></pre>")
-        .replace(/`(.*?)`/gim, "<code>$1</code>")
-        .replace(
-          /\[([^\]]+)\]\(([^)]+)\)/gim,
-          '<a href="$2" target="_blank">$1</a>'
-        )
-        .replace(
-          /^\s*- \[x\] (.*$)/gim,
-          '<div style="margin: 0.5em 0;"><input type="checkbox" checked disabled style="margin-right: 0.5em;">$1</div>'
-        )
-        .replace(
-          /^\s*- \[ \] (.*$)/gim,
-          '<div style="margin: 0.5em 0;"><input type="checkbox" disabled style="margin-right: 0.5em;">$1</div>'
-        )
-        // unordered list items
-        .replace(/(?:^\s*-\s.*\n?)+/gim, (match) => {
-          const items = match
-            .trim()
-            .split("\n")
-            .map((line) => line.replace(/^\s*-\s(.*)$/, "<li>$1</li>"))
-            .join("");
-          return `<ul>${items}</ul>`;
-        })
-        // ordered list items
-        .replace(/(?:^\s*\d+\.\s.*\n?)+/gim, (match) => {
-          const items = match
-            .trim()
-            .split("\n")
-            .map((line) => line.replace(/^\s*\d+\.\s(.*)$/, "<li>$1</li>"))
-            .join("");
-          return `<ol>${items}</ol>`;
-        })
-        .replace(/^> (.*$)/gim, "<blockquote>$1</blockquote>")
-        .replace(/^---$/gim, "<hr>")
-        .replace(/\n\n/gim, "</p><p>")
-        .replace(/\n/gim, "<br>")
+  // const renderMarkdown = (text) => {
+  //   const rawHtml = text
+  //       .replace(/^### (.*$)/gim, "<h3>$1</h3>")
+  //       .replace(/^## (.*$)/gim, "<h2>$1</h2>")
+  //       .replace(/^# (.*$)/gim, "<h1>$1</h1>")
+  //       .replace(/\*\*\*(.*?)\*\*\*/gim, "<strong><em>$1</em></strong>")
+  //       .replace(/\*\*(.*?)\*\*/gim, "<strong>$1</strong>")
+  //       .replace(/\*(.*?)\*/gim, "<em>$1</em>")
+  //       .replace(/```(\w+)?\n([\s\S]*?)```/gim, "<pre><code>$2</code></pre>")
+  //       .replace(/`(.*?)`/gim, "<code>$1</code>")
+  //       .replace(
+  //         /\[([^\]]+)\]\(([^)]+)\)/gim,
+  //         '<a href="$2" target="_blank">$1</a>'
+  //       )
+  //       .replace(
+  //         /^\s*- \[x\] (.*$)/gim,
+  //         '<div style="margin: 0.5em 0;"><input type="checkbox" checked disabled style="margin-right: 0.5em;">$1</div>'
+  //       )
+  //       .replace(
+  //         /^\s*- \[ \] (.*$)/gim,
+  //         '<div style="margin: 0.5em 0;"><input type="checkbox" disabled style="margin-right: 0.5em;">$1</div>'
+  //       )
+  //       // unordered list items
+  //       .replace(/(?:^\s*-\s.*\n?)+/gim, (match) => {
+  //         const items = match
+  //           .trim()
+  //           .split("\n")
+  //           .map((line) => line.replace(/^\s*-\s(.*)$/, "<li>$1</li>"))
+  //           .join("");
+  //         return `<ul>${items}</ul>`;
+  //       })
+  //       // ordered list items
+  //       .replace(/(?:^\s*\d+\.\s.*\n?)+/gim, (match) => {
+  //         const items = match
+  //           .trim()
+  //           .split("\n")
+  //           .map((line) => line.replace(/^\s*\d+\.\s(.*)$/, "<li>$1</li>"))
+  //           .join("");
+  //         return `<ol>${items}</ol>`;
+  //       })
+  //       .replace(/^> (.*$)/gim, "<blockquote>$1</blockquote>")
+  //       .replace(/^---$/gim, "<hr>")
+  //       .replace(/\n\n/gim, "</p><p>")
+  //       .replace(/\n/gim, "<br>")
 
-        return dompurify.sanitize(rawHtml);
-  };
+  //       return dompurify.sanitize(rawHtml);
+  // };
 
   //Exporting as markdown and html
   const exportAsMarkdown = () => {
@@ -212,7 +212,7 @@ const MarkdownEditor = () => {
   </style>
 </head>
 <body>
-  <div>${renderMarkdown(markdown)}</div>
+<div>${markdown}</div>
 </body>
 </html>`;
     const blob = new Blob([html], { type: "text/html" });
@@ -333,12 +333,12 @@ const MarkdownEditor = () => {
               </span>
             </div>
             <div className="flex-1 overflow-auto p-4 bg-white dark:bg-gray-900">
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: `<p>${renderMarkdown(markdown)}</p>`,
-                }}
-                className="markdown-content max-w-none prose prose-lg dark:prose-invert"
-              />
+              <div className="markdown-content max-w-none prose prose-lg dark:prose-invert">
+                <ReactMarkdown
+                  children={markdown}
+                  remarkPlugins={[remarkGfm]}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -363,6 +363,5 @@ const MarkdownEditor = () => {
 };
 
 export default MarkdownEditor;
-
 
 //Summary of changes made: Added comments to the code for better understanding of different sections and functionalities.
