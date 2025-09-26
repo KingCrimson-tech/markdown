@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import dompurify from "dompurify";
 // import ReactMarkdown from 'react-markdown';
 // import remarkGfm from 'remark-gfm';
 // import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -138,8 +139,7 @@ const MarkdownEditor = () => {
   //Rendering markdown with regex good enough for now(adding code highlighting and other stuff later)
   //XSS attack possible so use DOMpurify
   const renderMarkdown = (text) => {
-    return (
-      text
+    const rawHtml = text
         .replace(/^### (.*$)/gim, "<h3>$1</h3>")
         .replace(/^## (.*$)/gim, "<h2>$1</h2>")
         .replace(/^# (.*$)/gim, "<h1>$1</h1>")
@@ -182,7 +182,8 @@ const MarkdownEditor = () => {
         .replace(/^---$/gim, "<hr>")
         .replace(/\n\n/gim, "</p><p>")
         .replace(/\n/gim, "<br>")
-    );
+
+        return dompurify.sanitize(rawHtml);
   };
 
   //Exporting as markdown and html
@@ -343,7 +344,7 @@ const MarkdownEditor = () => {
         )}
       </div>
 
-      //Stats and info bar
+      {/* Stats and info bar */}
       <div className="border-t border-gray-300 dark:border-gray-700 p-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
         <div>
           <span className="mr-4">
@@ -365,4 +366,3 @@ export default MarkdownEditor;
 
 
 //Summary of changes made: Added comments to the code for better understanding of different sections and functionalities.
-//Todos: Sanitize HTML output, improve dom manipulation with useRef, dark mode detection from OS, code highlighting, better markdown parsing with a library(like react markdown)
