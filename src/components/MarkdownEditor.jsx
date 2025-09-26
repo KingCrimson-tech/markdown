@@ -11,34 +11,28 @@ const MarkdownEditor = () => {
     '# Welcome to Markdown Editor\n\nStart typing your markdown here...\n\n## Features\n- Live preview\n- Syntax highlighting\n- Dark mode support\n- Local storage persistence\n- Toolbar with formatting buttons\n- Keyboard shortcuts (Ctrl+B, Ctrl+I)\n\n## Example Content\n\n**Bold text** and *italic text*\n\n`Inline code` and code blocks:\n\n```javascript\nconst greeting = "Hello, World!";\nconsole.log(greeting);\n```\n\n> This is a blockquote\n> It can span multiple lines\n\n### Task List\n- [x] Build basic editor\n- [x] Add live preview\n- [ ] Add more features\n- [ ] Polish the UI\n\n---\n\n*Happy writing!*'
   );
   const [viewMode, setViewMode] = useState("split");
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [theme, setTheme] = useState("auto"); // "auto", true, or false
 
   //Load from local storage on mount
   useEffect(() => {
+    const savedTheme = localStorage.getItem("markdown-editor-theme");
+    if (savedTheme === "true") setTheme(true);
+    else if (savedTheme === "false") setTheme(false);
+    else setTheme("auto");
+    // Load markdown as before
     const savedMarkdown = localStorage.getItem("markdown-editor-content");
-    const savedDarkMode = localStorage.getItem("markdown-editor-dark-mode");
-
-    if (savedMarkdown) {
-      setMarkdown(savedMarkdown);
-    }
-
-    if (savedDarkMode) {
-      setIsDarkMode(JSON.parse(savedDarkMode));
-    }
+    if (savedMarkdown) setMarkdown(savedMarkdown);
   }, []);
 
-  //changes to the markdown are saved in the local storage(there has to be a better way to do this)
+  //A useEffect to listen to the os theme changes
   useEffect(() => {
-    localStorage.setItem("markdown-editor-content", markdown);
-  }, [markdown]);
-
-  //Dark mode thing(could do with following the os current theme)
-  useEffect(() => {
-    localStorage.setItem(
-      "markdown-editor-dark-mode",
-      JSON.stringify(isDarkMode)
-    );
-    if (isDarkMode) {
+    let dark;
+    if (theme === "auto") {
+      dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    } else {
+      dark = theme === true;
+    }
+    if (dark) {
       document.documentElement.classList.add("dark");
       document.body.style.backgroundColor = "#111827";
       document.body.style.color = "#f9fafb";
@@ -47,7 +41,38 @@ const MarkdownEditor = () => {
       document.body.style.backgroundColor = "#ffffff";
       document.body.style.color = "#111827";
     }
-  }, [isDarkMode]);
+    localStorage.setItem("markdown-editor-theme", theme);
+  }, [theme]);
+
+  useEffect(() => {
+    if (theme !== "auto") return;
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = () => setTheme("auto"); // triggers re-render
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, [theme]);
+
+  //changes to the markdown are saved in the local storage(there has to be a better way to do this)
+  useEffect(() => {
+    localStorage.setItem("markdown-editor-content", markdown);
+  }, [markdown]);
+
+  // //Dark mode thing(could do with following the os current theme)
+  // useEffect(() => {
+  //   localStorage.setItem(
+  //     "markdown-editor-dark-mode",
+  //     JSON.stringify(isDarkMode)
+  //   );
+  //   if (isDarkMode) {
+  //     document.documentElement.classList.add("dark");
+  //     document.body.style.backgroundColor = "#111827";
+  //     document.body.style.color = "#f9fafb";
+  //   } else {
+  //     document.documentElement.classList.remove("dark");
+  //     document.body.style.backgroundColor = "#ffffff";
+  //     document.body.style.color = "#111827";
+  //   }
+  // }, [isDarkMode]);
 
   //Bad code for directly manipulating textarea selection and inserting formatting(change this with useRef or something else)
   //changes needed are remove the markdown dependency from useCallback and use a ref for the textarea
@@ -151,7 +176,13 @@ const MarkdownEditor = () => {
   return (
     <div
       className={`h-screen flex flex-col ${
-        isDarkMode ? "dark bg-gray-900 text-white" : "bg-white text-gray-900"
+        (
+          theme === "auto"
+            ? window.matchMedia("(prefers-color-scheme: dark)").matches
+            : theme === true
+        )
+          ? "dark bg-gray-900 text-white"
+          : "bg-white text-gray-900"
       }`}
     >
       <div className="border-b border-gray-300 dark:border-gray-700 p-4 flex-shrink-0">
@@ -191,11 +222,15 @@ const MarkdownEditor = () => {
             </div>
 
             <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
+              onClick={() => {
+                if (theme === "auto") setTheme(true);
+                else if (theme === true) setTheme(false);
+                else setTheme("auto");
+              }}
               className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-medium"
-              title="Toggle dark mode"
+              title="Toggle theme"
             >
-              {isDarkMode ? "Light Mode" : "Dark Mode"}
+              {theme === "auto" ? "Auto" : theme === true ? "Dark" : "Light"}
             </button>
           </div>
         </div>
